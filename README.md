@@ -2,73 +2,37 @@ Name Deng chol kon
 Roll Number 202511436
 
 
-#include <iostream>
-#include <vector>
-using namespace std;
+# Student Result Management System
 
-// Function to calculate the average of numbers in a vector
-double calculateAverage(const vector<int>& numbers) {
-    int sum = 0;
-    for (int num : numbers) {
-        sum += num;
-    }
-    return numbers.empty() ? 0 : static_cast<double>(sum) / numbers.size();
-}
+def calculate_result(m1, m2, m3):
+    total = m1 + m2 + m3
+    average = total / 3
 
-int main() {
-    // Variables and data types
-    string name;
-    int choice;
-    vector<int> scores;
+    if average >= 50:
+        result = "Passed"
+    else:
+        result = "Failed"
 
-    // Input
-    cout << "Enter your name: ";
-    getline(cin, name);
+    return total, average, result
 
-    cout << "How many scores do you want to enter? ";
-    int n;
-    cin >> n;
 
-    // Loop to collect scores
-    for (int i = 0; i < n; i++) {
-        int score;
-        cout << "Enter score " << i + 1 << ": ";
-        cin >> score;
-        scores.push_back(score);
-    }
+while True:
+    name = input("Enter student name: ")
 
-    // Basic calculations
-    double average = calculateAverage(scores);
+    mark1 = int(input("Enter marks for Subject 1: "))
+    mark2 = int(input("Enter marks for Subject 2: "))
+    mark3 = int(input("Enter marks for Subject 3: "))
 
-    // Conditional statement
-    if (average >= 50) {
-        cout << name << ", you passed with an average of " << average << endl;
-    } else {
-        cout << name << ", you failed with an average of " << average << endl;
-    }
+    total, average, result = calculate_result(mark1, mark2, mark3)
 
-    // Switch statement
-    cout << "Choose a subject:
-";
-    cout << "1. Math
-2. English
-3. Science
-";
-    cin >> choice;
+    print("\n--- Student Result ---")
+    print("Name:", name)
+    print("Total Marks:", total)
+    print("Average Marks:", average)
+    print("Result:", result)
 
-    switch (choice) {
-        case 1:
-            cout << "You selected Math." << endl;
-            break;
-        case 2:
-            cout << "You selected English." << endl;
-            break;
-        case 3:
-            cout << "You selected Science." << endl;
-            break;
-        default:
-            cout << "Invalid choice." << endl;
-    }
+    choice = input("\nDo you want to enter another student? (yes/no): ")
 
-    return 0;
-}
+    if choice.lower() != "yes":
+        print("Program Ended")
+        break
