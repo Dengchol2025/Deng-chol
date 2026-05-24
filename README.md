@@ -1,38 +1,48 @@
-Name Deng chol kon
+Name Deng chol kon 
 Roll Number 202511436
+#include <iostream>
+using namespace std;
 
+// Function to calculate and display result
+void calculateResult(int english, int math, int science)
+{
+    int total = english + math + science;
+    float average = total / 3.0;
 
-# Student Result Management System
+    cout << "\n------ Student Result ------" << endl;
+    cout << "Student Name : Deng" << endl;
+    cout << "English      : " << english << endl;
+    cout << "Math         : " << math << endl;
+    cout << "Science      : " << science << endl;
+    cout << "Total Marks  : " << total << endl;
+    cout << "Average      : " << average << endl;
 
-def calculate_result(m1, m2, m3):
-    total = m1 + m2 + m3
-    average = total / 3
+    if (average >= 50)
+    {
+        cout << "Result       : Passed" << endl;
+    }
+    else
+    {
+        cout << "Result       : Failed" << endl;
+    }
+}
 
-    if average >= 50:
-        result = "Passed"
-    else:
-        result = "Failed"
+int main()
+{
+    int english, math, science;
 
-    return total, average, result
+    // Input marks
+    cout << "Enter marks for English: ";
+    cin >> english;
 
+    cout << "Enter marks for Math: ";
+    cin >> math;
 
-while True:
-    name = input("Enter student name: ")
+    cout << "Enter marks for Science: ";
+    cin >> science;
 
-    mark1 = int(input("Enter marks for Subject 1: "))
-    mark2 = int(input("Enter marks for Subject 2: "))
-    mark3 = int(input("Enter marks for Subject 3: "))
+    // Function call
+    calculateResult(english, math, science);
 
-    total, average, result = calculate_result(mark1, mark2, mark3)
-
-    print("\n--- Student Result ---")
-    print("Name:", name)
-    print("Total Marks:", total)
-    print("Average Marks:", average)
-    print("Result:", result)
-
-    choice = input("\nDo you want to enter another student? (yes/no): ")
-
-    if choice.lower() != "yes":
-        print("Program Ended")
-        break
+    return 0;
+}
