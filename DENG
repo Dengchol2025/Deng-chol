@@ -1,0 +1,265 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
+using namespace std;
+
+class Student {
+private:
+    string rollNumber;
+    string name;
+    int age;
+
+public:
+    Student() {}
+    
+    Student(string roll, string n, int a) {
+        rollNumber = roll;
+        name = n;
+        age = a;
+    }
+    
+    void setRollNumber(string roll) {
+        rollNumber = roll;
+    }
+    
+    void setName(string n) {
+        name = n;
+    }
+    
+    void setAge(int a) {
+        age = a;
+    }
+    
+    string getRollNumber() const {
+        return rollNumber;
+    }
+    
+    string getName() const {
+        return name;
+    }
+    
+    int getAge() const {
+        return age;
+    }
+    
+    void display() const {
+        cout << "Roll Number: " << rollNumber << endl;
+        cout << "Name: " << name << endl;
+        cout << "Age: " << age << endl;
+    }
+    
+    string toCSV() const {
+        return rollNumber + "," + name + "," + to_string(age);
+    }
+    
+    void fromCSV(string line) {
+        stringstream ss(line);
+        getline(ss, rollNumber, ',');
+        getline(ss, name, ',');
+        string ageStr;
+        getline(ss, ageStr, ',');
+        age = stoi(ageStr);
+    }
+};
+
+void displayAllStudents() {
+    ifstream file("student.txt");
+    if (!file.is_open()) {
+        cout << "No student file found." << endl;
+        return;
+    }
+    
+    string line;
+    bool found = false;
+    cout << "
+=== All Students ===" << endl;
+    while (getline(file, line)) {
+        if (!line.empty()) {
+            Student student;
+            student.fromCSV(line);
+            student.display();
+            cout << "-------------------" << endl;
+            found = true;
+        }
+    }
+    
+    if (!found) {
+        cout << "No students found in the file." << endl;
+    }
+    
+    file.close();
+}
+
+void searchStudent() {
+    string rollNumber;
+    cout << "Enter Roll Number to search: ";
+    cin >> rollNumber;
+    
+    ifstream file("student.txt");
+    if (!file.is_open()) {
+        cout << "No student file found." << endl;
+        return;
+    }
+    
+    string line;
+    bool found = false;
+    while (getline(file, line)) {
+        if (!line.empty()) {
+            Student student;
+            student.fromCSV(line);
+            if (student.getRollNumber() == rollNumber) {
+                cout << "
+Student found:" << endl;
+                student.display();
+                found = true;
+                break;
+            }
+        }
+    }
+    
+    if (!found) {
+        cout << "Student not found" << endl;
+    }
+    
+    file.close();
+}
+
+void updateStudent() {
+    string rollNumber;
+    cout << "Enter Roll Number to update: ";
+    cin >> rollNumber;
+    
+    ifstream file("student.txt");
+    if (!file.is_open()) {
+        cout << "No student file found." << endl;
+        return;
+    }
+    
+    vector<Student> students;
+    string line;
+    bool found = false;
+    
+    while (getline(file, line)) {
+        if (!line.empty()) {
+            Student student;
+            student.fromCSV(line);
+            students.push_back(student);
+            if (student.getRollNumber() == rollNumber) {
+                found = true;
+            }
+        }
+    }
+    file.close();
+    
+    if (!found) {
+        cout << "Student not found" << endl;
+        return;
+    }
+    
+    cout << "Enter new name: ";
+    cin.ignore();
+    getline(cin, line);
+    string newName = line;
+    
+    cout << "Enter new age: ";
+    int newAge;
+    cin >> newAge;
+    
+    for (int i = 0; i < students.size(); i++) {
+        if (students[i].getRollNumber() == rollNumber) {
+            students[i].setName(newName);
+            students[i].setAge(newAge);
+            break;
+        }
+    }
+    
+    ofstream outFile("student.txt");
+    for (int i = 0; i < students.size(); i++) {
+        outFile << students[i].toCSV() << endl;
+    }
+    outFile.close();
+    
+    cout << "Student updated successfully!" << endl;
+}
+
+void deleteStudent() {
+    string rollNumber;
+    cout << "Enter Roll Number to delete: ";
+    cin >> rollNumber;
+    
+    ifstream file("student.txt");
+    if (!file.is_open()) {
+        cout << "No student file found." << endl;
+        return;
+    }
+    
+    vector<Student> students;
+    string line;
+    bool found = false;
+    
+    while (getline(file, line)) {
+        if (!line.empty()) {
+            Student student;
+            student.fromCSV(line);
+            if (student.getRollNumber() == rollNumber) {
+                found = true;
+            } else {
+                students.push_back(student);
+            }
+        }
+    }
+    file.close();
+    
+    if (!found) {
+        cout << "Student not found" << endl;
+        return;
+    }
+    
+    ofstream outFile("student.txt");
+    for (int i = 0; i < students.size(); i++) {
+        outFile << students[i].toCSV() << endl;
+    }
+    outFile.close();
+    
+    cout << "Student deleted successfully!" << endl;
+}
+
+int main() {
+    int choice;
+    
+    do {
+        cout << "
+=== Student Management System ===" << endl;
+        cout << "1. Display All Students" << endl;
+        cout << "2. Search Student" << endl;
+        cout << "3. Update Student" << endl;
+        cout << "4. Delete Student" << endl;
+        cout << "5. Exit" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+        
+        switch (choice) {
+            case 1:
+                displayAllStudents();
+                break;
+            case 2:
+                searchStudent();
+                break;
+            case 3:
+                updateStudent();
+                break;
+            case 4:
+                deleteStudent();
+                break;
+            case 5:
+                cout << "Exiting program..." << endl;
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+        }
+    } while (choice != 5);
+    
+    return 0;
+}
