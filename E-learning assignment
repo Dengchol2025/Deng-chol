@@ -1,0 +1,316 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <iomanip>
+#include <limits>
+
+using namespace std;
+
+// Base class User
+class User {
+protected:
+    string name;
+    string email;
+    string phone;
+
+public:
+    // Default constructor
+    User() : name(""), email(""), phone("") {}
+
+    // Parameterized constructor
+    User(string n, string e, string p) : name(n), email(e), phone(p) {}
+
+    // Getters
+    string getName() const { return name; }
+    string getEmail() const { return email; }
+    string getPhone() const { return phone; }
+
+    // Setters
+    void setName(string n) { name = n; }
+    void setEmail(string e) { email = e; }
+    void setPhone(string p) { phone = p; }
+
+    virtual void display() const {
+        cout << "Name: " << name << endl;
+        cout << "Email: " << email << endl;
+        cout << "Phone: " << phone << endl;
+    }
+};
+
+// Derived class VehicleOwner
+class VehicleOwner : public User {
+public:
+    // Constructor with chaining
+    VehicleOwner(string n, string e, string p) : User(n, e, p) {}
+
+    void display() const override {
+        User::display();
+    }
+};
+
+// Vehicle class (associated with VehicleOwner)
+class Vehicle {
+private:
+    string plateNumber;
+    string vehicleType;
+    int year;
+    VehicleOwner owner;
+
+public:
+    // Constructor
+    Vehicle(string plate, string type, int y, VehicleOwner o)
+        : plateNumber(plate), vehicleType(type), year(y), owner(o) {}
+
+    // Getters
+    string getPlateNumber() const { return plateNumber; }
+    string getVehicleType() const { return vehicleType; }
+    int getYear() const { return year; }
+    VehicleOwner getOwner() const { return owner; }
+
+    // Display vehicle info
+    void display() const {
+        cout << "Plate Number: " << plateNumber << endl;
+        cout << "Vehicle Type: " << vehicleType << endl;
+        cout << "Year: " << year << endl;
+        owner.display();
+    }
+
+    // Convert to CSV string
+    string toCSV() const {
+        return plateNumber + "," + vehicleType + "," + to_string(year) + "," +
+               owner.getName() + "," + owner.getEmail() + "," + owner.getPhone();
+    }
+};
+
+// Validation functions
+bool isValidEmail(const string& email) {
+    if (email.empty() || email.front() == '@' || email.front() == '.' || email.back() == '@' || email.back() == '.') {
+        return false;
+    }
+    size_t atPos = email.find('@');
+    size_t dotPos = email.find_last_of('.');
+    return atPos != string::npos && dotPos != string::npos && atPos < dotPos;
+}
+
+bool isValidPhone(const string& phone) {
+    if (phone.length() != 13 || phone.substr(0, 4) != "+250") {
+        return false;
+    }
+    for (size_t i = 4; i < phone.length(); ++i) {
+        if (!isdigit(phone[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool isValidPlate(const string& plate) {
+    // Simple validation: starts with letter(s), followed by numbers and letters, e.g., RAA123A
+    if (plate.length() < 5 || plate.length() > 10) return false;
+    bool hasLetter = false, hasDigit = false;
+    for (char c : plate) {
+        if (isalpha(c)) hasLetter = true;
+        else if (isdigit(c)) hasDigit = true;
+        else if (c != '-') return false; // Allow hyphen if needed, but example doesn't have
+    }
+    return hasLetter && hasDigit;
+}
+
+bool isValidYear(int year) {
+    return year >= 1900 && year <= 2026;
+}
+
+// Function to read all records from file
+vector<Vehicle> loadRecords() {
+    vector<Vehicle> records;
+    ifstream file("records.txt");
+    string line;
+
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+
+        stringstream ss(line);
+        string plate, type, yearStr, name, email, phone;
+        int year;
+
+        getline(ss, plate, ',');
+        getline(ss, type, ',');
+        getline(ss, yearStr, ',');
+        getline(ss, name, ',');
+        getline(ss, email, ',');
+        getline(ss, phone, ',');
+
+        try {
+            year = stoi(yearStr);
+            VehicleOwner owner(name, email, phone);
+            Vehicle vehicle(plate, type, year, owner);
+            records.push_back(vehicle);
+        } catch (...) {
+            // Skip invalid lines
+        }
+    }
+    file.close();
+    return records;
+}
+
+// Function to save a vehicle record
+void saveRecord(const Vehicle& vehicle) {
+    ofstream file("records.txt", ios::app);
+    if (file.is_open()) {
+        file << vehicle.toCSV() << endl;
+        file.close();
+        cout << "Record saved successfully!" << endl;
+    } else {
+        cout << "Error opening file for writing!" << endl;
+    }
+}
+
+// Display all records in table format
+void displayAllRecords() {
+    vector<Vehicle> records = loadRecords();
+    if (records.empty()) {
+        cout << "No records found." << endl;
+        return;
+    }
+
+    cout << left << setw(12) << "Plate" 
+         << setw(12) << "Type" 
+         << setw(6) << "Year" 
+         << setw(20) << "Owner Name" 
+         << setw(25) << "Email" 
+         << setw(15) << "Phone" << endl;
+    cout << string(90, '-') << endl;
+
+    for (const auto& v : records) {
+        cout << left << setw(12) << v.getPlateNumber()
+             << setw(12) << v.getVehicleType()
+             << setw(6) << v.getYear()
+             << setw(20) << v.getOwner().getName()
+             << setw(25) << v.getOwner().getEmail()
+             << setw(15) << v.getOwner().getPhone() << endl;
+    }
+}
+
+// Search by plate number
+void searchByPlate() {
+    string plate;
+    cout << "Enter Plate Number to search: ";
+    cin >> plate;
+
+    vector<Vehicle> records = loadRecords();
+    bool found = false;
+
+    for (const auto& v : records) {
+        if (v.getPlateNumber() == plate) {
+            cout << "\n=== Vehicle Found ===\n";
+            v.display();
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        cout << "No vehicle found with plate number: " << plate << endl;
+    }
+}
+
+// Add new record with validation
+void addRecord() {
+    string plate, type, name, email, phone;
+    int year;
+
+    // Plate validation
+    do {
+        cout << "Enter Plate Number (e.g., RAA123A): ";
+        cin >> plate;
+        if (!isValidPlate(plate)) {
+            cout << "Invalid plate format! Try again." << endl;
+        }
+    } while (!isValidPlate(plate));
+
+    cout << "Enter Vehicle Type (e.g., Sedan): ";
+    cin.ignore();
+    getline(cin, type);
+
+    // Year validation
+    do {
+        cout << "Enter Year (1900-2026): ";
+        while (!(cin >> year)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input! Enter a number: ";
+        }
+        if (!isValidYear(year)) {
+            cout << "Year must be between 1900 and 2026!" << endl;
+        }
+    } while (!isValidYear(year));
+
+    // Owner details
+    cout << "Enter Owner Name: ";
+    cin.ignore();
+    getline(cin, name);
+
+    // Email validation
+    do {
+        cout << "Enter Email: ";
+        cin >> email;
+        if (!isValidEmail(email)) {
+            cout << "Invalid email! Must contain @ and . " << endl;
+        }
+    } while (!isValidEmail(email));
+
+    // Phone validation
+    do {
+        cout << "Enter Phone (+250XXXXXXXXX): ";
+        cin >> phone;
+        if (!isValidPhone(phone)) {
+            cout << "Invalid phone! Must be +250 followed by 9 digits (13 chars total)." << endl;
+        }
+    } while (!isValidPhone(phone));
+
+    VehicleOwner owner(name, email, phone);
+    Vehicle vehicle(plate, type, year, owner);
+
+    saveRecord(vehicle);
+}
+
+int main() {
+    int choice;
+    cout << "=== Vehicle Registration and Owner Management System ===" << endl;
+
+    while (true) {
+        cout << "\nMenu:\n";
+        cout << "1. Add New Vehicle Record\n";
+        cout << "2. Display All Records\n";
+        cout << "3. Search by Plate Number\n";
+        cout << "4. Exit\n";
+        cout << "Enter your choice: ";
+
+        while (!(cin >> choice)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input! Enter a number: ";
+        }
+
+        switch (choice) {
+            case 1:
+                addRecord();
+                break;
+            case 2:
+                displayAllRecords();
+                break;
+            case 3:
+                searchByPlate();
+                break;
+            case 4:
+                cout << "Exiting program. Goodbye!" << endl;
+                return 0;
+            default:
+                cout << "Invalid choice! Please try again." << endl;
+        }
+    }
+
+    return 0;
+}
